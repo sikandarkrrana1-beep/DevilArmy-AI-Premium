@@ -1,1 +1,200 @@
 
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DevilArmy-Premium | Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid;
+      place-items: center; padding: 20px;
+      background: #090909; color: white;
+      font-family: Arial, sans-serif;
+    }
+    .card {
+      width: 100%; max-width: 400px; padding: 26px;
+      background: #171717; border: 1px solid #632020;
+      border-radius: 18px; box-shadow: 0 0 28px #4b090933;
+    }
+    h1 { color: #ff3030; text-align: center; }
+    p { color: #bbb; text-align: center; }
+    input, button {
+      width: 100%; padding: 13px; margin-top: 12px;
+      border-radius: 9px; font-size: 16px;
+    }
+    input { background: #101010; color: white; border: 1px solid #444; }
+    button {
+      border: 0; background: #d71920; color: white;
+      font-weight: bold; cursor: pointer;
+    }
+    button:disabled { opacity: .6; }
+    .secondary { background: #333; }
+    #message { overflow-wrap: anywhere; line-height: 1.5; }
+    #account { display: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>DEVILARMY</h1>
+    <p>Premium AI Shayari & Caption</p>
+
+    <section id="auth">
+      <input id="email" type="email" placeholder="Email address"
+             autocomplete="email" required>
+      <input id="password" type="password" placeholder="Password (कम से कम 8 अक्षर)"
+             autocomplete="current-password" minlength="8" required>
+
+      <button id="signup">Create Account</button>
+      <button id="login" class="secondary">Login</button>
+    </section>
+
+    <section id="account">
+      <p>Login सफल हुआ! ✅</p>
+      <p id="userEmail"></p>
+      <button id="logout">Logout</button>
+    </section>
+
+    <p id="message" role="status" aria-live="polite"></p>
+  </main>
+
+  <script>
+    // इन दोनों placeholders को अपने Supabase details से बदलें।
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+
+    const message = document.getElementById("message");
+    const authSection = document.getElementById("auth");
+    const accountSection = document.getElementById("account");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    let supabaseClient;
+
+    function showMessage(text) {
+      message.textContent = text;
+    }
+
+    function setBusy(busy) {
+      ["signup", "login", "logout"].forEach(id => {
+        document.getElementById(id).disabled = busy;
+      });
+    }
+
+    function showSession(session) {
+      const loggedIn = Boolean(session?.user);
+      authSection.style.display = loggedIn ? "none" : "block";
+      accountSection.style.display = loggedIn ? "block" : "none";
+      document.getElementById("userEmail").textContent =
+        loggedIn ? session.user.email : "";
+    }
+
+    async function init() {
+      if (
+        SUPABASE_URL.includes("YOUR_") ||
+        SUPABASE_KEY.includes("YOUR_")
+      ) {
+        showMessage("पहले Supabase Project URL और Publishable key भरें।");
+        setBusy(true);
+        return;
+      }
+
+      try {
+        supabaseClient = window.supabase.createClient(
+          SUPABASE_URL, SUPABASE_KEY,
+          {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true
+            }
+          }
+        );
+
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) throw error;
+        showSession(data.session);
+
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+          showSession(session);
+        });
+      } catch (error) {
+        showMessage("सेटअप Error: " + error.message);
+      }
+    }
+
+    document.getElementById("signup").addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      if (!email || password.length < 8) {
+        showMessage("सही Email और कम से कम 8 अक्षर का Password भरें।");
+        return;
+      }
+
+      setBusy(true);
+      showMessage("Account बनाया जा रहा है...");
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin +
+              window.location.pathname
+          }
+        });
+        if (error) throw error;
+
+        if (data.session) {
+          showMessage("Account बन गया और Login हो गया!");
+        } else {
+          showMessage("Account अनुरोध सफल! अपना Email खोलकर verification link दबाएँ।");
+        }
+      } catch (error) {
+        showMessage("Sign Up Error: " + error.message);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    document.getElementById("login").addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      if (!email || !password) {
+        showMessage("Email और Password दोनों भरें।");
+        return;
+      }
+
+      setBusy(true);
+      showMessage("Login हो रहा है...");
+      try {
+        const { error } =
+          await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        showMessage("Login सफल!");
+      } catch (error) {
+        showMessage("Login Error: " + error.message);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      setBusy(true);
+      try {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) throw error;
+        showMessage("आप Logout हो गए हैं।");
+      } catch (error) {
+        showMessage("Logout Error: " + error.message);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
+

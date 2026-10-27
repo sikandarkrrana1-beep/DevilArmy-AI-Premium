@@ -1,224 +1,661 @@
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090909">
+  <meta name="theme-color" content="#0a0a0a">
   <title>DevilArmy Premium</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    :root{color-scheme:dark;--bg:#090909;--panel:#171717;--line:#632020;--red:#d71920;--text:#fff;--muted:#bbb}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;padding:20px;background:radial-gradient(circle at top,#291010 0,#090909 55%);color:var(--text);font-family:Arial,sans-serif}
-    main{width:min(760px,100%);margin:0 auto}
-    .card{width:100%;padding:22px;background:#171717;border:1px solid var(--line);border-radius:18px;box-shadow:0 0 28px #4b090933;margin:14px 0}
-    h1,h2{color:#ff3030;margin-top:0}h1{text-align:center} .center{text-align:center}
-    p,.muted{color:var(--muted);line-height:1.5}
-    input,select,textarea,button{width:100%;padding:13px;margin-top:10px;border-radius:9px;font-size:16px}
-    input,select,textarea{background:#101010;color:white;border:1px solid #444}
-    textarea{min-height:90px;resize:vertical}
-    button{border:0;background:var(--red);color:white;font-weight:bold;cursor:pointer}
-    button:disabled{opacity:.55;cursor:wait}.secondary{background:#333}.smallbtn{width:auto;padding:9px 12px}
-    #message,#appStatus,#historyStatus{overflow-wrap:anywhere;line-height:1.5}
-    #app,#account{display:none}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    label{display:block;margin-top:10px;color:#eee;font-size:14px}
-    .result{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;min-height:70px;padding:10px 0}
-    .history-item{border:1px solid #444;border-radius:10px;padding:12px;margin:10px 0}
-    .history-item p{white-space:pre-wrap;overflow-wrap:anywhere}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-    .topbar h1{margin:0;text-align:left}
-    .topbar button{width:auto;margin:0}
-    .note{font-size:12px;color:#999}
-    @media(max-width:520px){body{padding:12px}.grid{grid-template-columns:1fr}.card{padding:16px}}
+    :root {
+      --bg: #090909;
+      --panel: #151515;
+      --panel2: #202020;
+      --red: #ff303b;
+      --text: #f5f5f5;
+      --muted: #aaa;
+      --border: #303030;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, Arial, sans-serif;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #101010;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      color: var(--red);
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .brand small {
+      display: block;
+      color: #aaa;
+      font-size: 10px;
+      letter-spacing: 3px;
+    }
+
+    .menu-toggle, .btn {
+      border: 1px solid #493034;
+      border-radius: 10px;
+      background: #251416;
+      color: white;
+      padding: 10px 14px;
+    }
+
+    .menu-toggle { display: none; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 235px minmax(0, 1fr);
+      min-height: calc(100vh - 65px);
+    }
+
+    .sidebar {
+      padding: 20px 12px;
+      background: #101010;
+      border-right: 1px solid var(--border);
+    }
+
+    .nav-btn {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 8px;
+      text-align: left;
+      color: #ddd;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: #291214;
+      border-color: #70232b;
+      color: #fff;
+    }
+
+    main {
+      width: 100%;
+      max-width: 1000px;
+      padding: 24px;
+      margin: 0 auto;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    h1 { font-size: clamp(24px, 4vw, 34px); margin-top: 0; }
+    h2 { font-size: 21px; }
+    .accent { color: var(--red); }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 7px;
+      color: #ddd;
+    }
+
+    input, textarea, select {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      color: white;
+      background: #0d0d0d;
+      border: 1px solid #383838;
+      border-radius: 9px;
+    }
+
+    textarea { min-height: 125px; resize: vertical; }
+
+    .primary {
+      width: 100%;
+      margin-top: 16px;
+      padding: 13px;
+      color: white;
+      font-weight: 800;
+      background: linear-gradient(110deg, #c81726, #ff3543);
+      border: 0;
+      border-radius: 10px;
+    }
+
+    .btn { margin: 5px 5px 5px 0; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .status { margin: 12px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .output { line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+    .history-item {
+      padding: 14px;
+      margin: 10px 0;
+      background: #101010;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .history-item p { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .danger { color: #ff7c83; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 720px) {
+      .topbar { padding: 12px; }
+      .menu-toggle { display: block; }
+      .layout { display: block; }
+      .sidebar {
+        display: none;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar.open { display: block; }
+      main { padding: 16px 12px; }
+      .card { padding: 16px; }
+    }
   </style>
 </head>
+
 <body>
-<main>
-  <section class="card" id="auth">
-    <h1>DEVILARMY PREMIUM</h1>
-    <p class="center">Secure Login • AI Shayari & Caption Generator</p>
-    <form id="authForm">
-      <label for="email">Email address</label>
-      <input id="email" type="email" placeholder="Email address" autocomplete="email" required>
-      <label for="password">Password</label>
-      <input id="password" type="password" placeholder="Password (कम से कम 8 अक्षर)" autocomplete="current-password" minlength="8" required>
-      <button id="login" type="submit">Login</button>
-      <button id="signup" type="button" class="secondary">Create Account</button>
-    </form>
-    <p id="message" role="status" aria-live="polite"></p>
-  </section>
-
-  <section id="app" aria-live="polite">
-    <div class="card topbar">
-      <div><h1>DEVILARMY <span style="color:white">PREMIUM</span></h1><p style="margin-bottom:0">AI Shayari • Reels Captions • Hindi & Hinglish</p></div>
-      <button id="logout" type="button" class="secondary">Logout</button>
+  <header class="topbar">
+    <div class="brand">
+      DEVILARMY
+      <small>PREMIUM STUDIO</small>
     </div>
-    <div class="card">
-      <p>Login सफल ✅ <span id="userEmail"></span></p>
-      <h2>AI Generator</h2>
-      <label for="kind">क्या बनाना है?</label>
-      <select id="kind">
-        <option>Love Shayari</option>
-        <option>Desi Attitude Dialogue</option>
-        <option>Sad Feelings Shayari</option>
-        <option>Motivational Shayari</option>
-        <option>Instagram Reel Caption</option>
-        <option>Facebook Post Caption</option>
-        <option>Army / Fauji Respect Quote</option>
-      </select>
-      <div class="grid">
-        <div><label for="lang">भाषा</label><select id="lang"><option value="Hindi">हिंदी</option><option value="Hinglish">Hinglish (Roman Hindi)</option></select></div>
-        <div><label for="mood">स्टाइल</label><select id="mood"><option>Desi, natural, heart-touching</option><option>Short, catchy, trending reel style</option><option>Attitude, confident, respectful</option><option>Emotional but hopeful</option><option>Romantic, sweet, respectful</option><option>Motivational, energetic, original</option></select></div>
+    <button class="menu-toggle" id="menuToggle"
+      aria-expanded="false" aria-controls="sidebar">☰ MENU</button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <button class="nav-btn active" data-view="home">⌂ Home</button>
+      <button class="nav-btn" data-view="generate">✦ AI Generate</button>
+      <button class="nav-btn" data-view="history">◷ Generation History</button>
+      <button class="nav-btn" data-view="profile">♙ Profile</button>
+      <button class="nav-btn" data-view="settings">⚙ Settings</button>
+      <hr style="border-color:#303030">
+      <button class="nav-btn danger" id="logoutBtn">↪ Logout</button>
+    </aside>
+
+    <main>
+      <div class="card">
+        <strong>Account:</strong>
+        <span id="accountStatus">Checking login...</span>
+        <div class="muted" id="userEmail"></div>
       </div>
-      <label for="topic">विषय (ज़रूरी)</label>
-      <textarea id="topic" maxlength="300" placeholder="जैसे: सच्चा प्यार, फौजी की ड्यूटी, दोस्ती, मेहनत, देसी स्वैग…" required></textarea>
-      <div class="grid">
-        <div><label for="length">लंबाई</label><select id="length"><option value="2-4 short lines">Short (2–4 lines)</option><option value="4-8 lines">Medium (4–8 lines)</option><option value="one punchy line">One-line caption</option></select></div>
-        <div><label for="count">वर्ज़न</label><select id="count"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-      </div>
-      <button id="generate" type="button">✨ AI से बनाओ</button>
-      <p id="appStatus" role="status" aria-live="polite"></p>
-      <p class="note">API key इस पेज पर न डालें। Gemini key Cloudflare Worker Secret में ही रखें।</p>
-    </div>
-    <div class="card">
-      <h2>तुम्हारा रिज़ल्ट</h2>
-      <div id="result" class="result"></div>
-      <div class="grid"><button id="copy" type="button" class="secondary">📋 टेक्स्ट कॉपी</button><button id="again" type="button" class="secondary">🔄 फिर से बनाओ</button></div>
-    </div>
-    <div class="card">
-      <div class="topbar"><h2 style="margin:0">My Generation History</h2><button id="loadHistory" type="button" class="secondary smallbtn">Refresh</button></div>
-      <p id="historyStatus" role="status" aria-live="polite"></p>
-      <div id="historyList"></div>
-    </div>
-  </section>
-</main>
 
-<script>
-(() => {
-  // Supabase Project URL and Publishable key. Never put a service_role/secret key here.
-  const SUPABASE_URL = "https://fxqcdjsodzgfddfhtmez.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_VeZ2VRgTNOfPyKXDNAB9sg_6lSfrkev";
+      <section class="view active" id="home">
+        <h1>Welcome to <span class="accent">DevilArmy</span></h1>
+        <p class="muted">आपका AI Shayari और Caption Creator Studio</p>
+        <div class="card">
+          <h2>AI Creator Studio</h2>
+          <p>Hindi और Hinglish में shayari, captions और dialogues बनाएं।</p>
+          <button class="primary" data-go="generate">✦ Start Generating</button>
+        </div>
+        <div class="card">
+          <h2>Generation History</h2>
+          <p class="muted">अपनी पिछली generations देखने के लिए History खोलें।</p>
+          <button class="btn" data-go="history">Open History</button>
+        </div>
+      </section>
 
-  // This Worker must implement authenticated POST /generate and GET /history routes.
-  const WORKER_URL = "devilarmy-ai.sikandarkrrana1.workers.dev";
+      <section class="view" id="generate">
+        <h1>✦ AI <span class="accent">Generate</span></h1>
+        <div class="card">
+          <form id="generateForm">
+            <label for="category">Content Type</label>
+            <select id="category">
+              <option value="Shayari">Hindi Shayari</option>
+              <option value="Caption">Instagram Caption</option>
+              <option value="Dialogue">Desi Dialogue</option>
+              <option value="Motivation">Motivational Lines</option>
+              <option value="Love">Love Quotes</option>
+              <option value="Sad">Sad Quotes</option>
+            </select>
 
-  const $ = id => document.getElementById(id);
-  const authSection = $("auth");
-  const appSection = $("app");
-  const message = $("message");
-  const appStatus = $("appStatus");
-  const historyStatus = $("historyStatus");
-  const historyList = $("historyList");
-  let client;
-  let busy = false;
+            <label for="language">Language</label>
+            <select id="language">
+              <option value="Hindi">Hindi</option>
+              <option value="Hinglish">Hinglish</option>
+              <option value="English">English</option>
+            </select>
 
-  function authMessage(text){ message.textContent = text; }
-  function appMessage(text){ appStatus.textContent = text; }
+            <label for="prompt">अपना topic या prompt लिखें</label>
+            <textarea id="prompt" maxlength="2000"
+              placeholder="जैसे: दिल छू लेने वाली देसी motivational shayari"
+              required></textarea>
 
-  function setBusy(value) {
-    busy = value;
-    ["login","signup","logout","generate","again","loadHistory"].forEach(id => {
-      const el = $(id);
-      if (el) el.disabled = value;
-    });
-  }
+            <button class="primary" id="generateBtn" type="submit">
+              ✦ Generate Now
+            </button>
+          </form>
+          <div class="status muted" id="generateStatus" role="status"></div>
+        </div>
 
-  function showSession(session) {
-    const loggedIn = Boolean(session && session.user);
-    authSection.style.display = loggedIn ? "none" : "block";
-    appSection.style.display = loggedIn ? "block" : "none";
-    $("userEmail").textContent = loggedIn ? "— " + (session.user.email || "") : "";
-    if (!loggedIn) {
-      $("result").textContent = "";
-      historyList.replaceChildren();
-      historyStatus.textContent = "";
+        <div class="card hidden" id="resultCard">
+          <h2>आपका Result</h2>
+          <div class="output" id="resultText"></div>
+          <button class="btn" id="copyBtn">Copy Text</button>
+        </div>
+      </section>
+
+      <section class="view" id="history">
+        <h1>◷ Generation <span class="accent">History</span></h1>
+        <div class="card">
+          <button class="btn" id="refreshHistory">↻ Refresh History</button>
+          <div class="status muted" id="historyStatus"></div>
+          <div id="historyList"></div>
+        </div>
+      </section>
+
+      <section class="view" id="profile">
+        <h1>♙ My <span class="accent">Profile</span></h1>
+        <div class="card">
+          <p><strong>Email:</strong> <span id="profileEmail">—</span></p>
+          <p><strong>User ID:</strong></p>
+          <p class="muted" id="profileId">—</p>
+          <p class="muted">आपकी पहचान Supabase login session से ली जाती है।</p>
+        </div>
+      </section>
+
+      <section class="view" id="settings">
+        <h1>⚙ <span class="accent">Settings</span></h1>
+        <div class="card">
+          <label for="defaultLanguage">Default Language</label>
+          <select id="defaultLanguage">
+            <option value="Hindi">Hindi</option>
+            <option value="Hinglish">Hinglish</option>
+            <option value="English">English</option>
+          </select>
+
+          <label for="workerUrl">Cloudflare Worker URL</label>
+          <input id="workerUrl" type="url"
+            placeholder="https://your-worker.your-subdomain.workers.dev">
+
+          <p class="muted">
+            URL केवल अपने असली deployed Worker का डालें।
+            API key या Supabase service-role key यहाँ न डालें।
+          </p>
+          <button class="primary" id="saveSettings">Save Settings</button>
+          <p class="status muted" id="settingsStatus" role="status"></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Supabase browser SDK: publishable/anon key only -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // ===== 1. APNI SUPABASE PUBLIC CONFIGURATION DAALEIN =====
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY";
+
+    // Worker URL Settings screen se bhi set kar sakte hain.
+    const DEFAULT_WORKER_URL = "https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev";
+
+    const $ = (id) => document.getElementById(id);
+    const supabaseReady =
+      window.supabase &&
+      SUPABASE_URL.startsWith("https://") &&
+      !SUPABASE_URL.includes("YOUR_") &&
+      !SUPABASE_PUBLISHABLE_KEY.includes("YOUR_");
+
+    const supabaseClient = supabaseReady
+      ? window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_PUBLISHABLE_KEY
+        )
+      : null;
+
+    let currentUser = null;
+    let latestResult = "";
+
+    function getWorkerUrl() {
+      const saved = localStorage.getItem("da_worker_url");
+      return (saved || DEFAULT_WORKER_URL).trim().replace(/\/+$/, "");
     }
-  }
 
-  async function getSession() {
-    const { data, error } = await client.auth.getSession();
-    if (error) throw error;
-    if (!data.session) throw new Error("पहले Login करो।");
-    return data.session;
-  }
-
-  async function workerRequest(path, options = {}) {
-    const session = await getSession();
-    const response = await fetch(WORKER_URL + path, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + session.access_token,
-        ...(options.headers || {})
-      },
-      cache: "no-store"
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "Request असफल हुआ (" + response.status + ")");
-    return data;
-  }
-
-  async function signUp() {
-    if (busy) return;
-    const email = $("email").value.trim();
-    const password = $("password").value;
-    if (!email || password.length < 8) {
-      authMessage("सही Email और कम से कम 8 अक्षर का Password भरें।");
-      return;
+    function setStatus(id, message) {
+      $(id).textContent = message;
     }
-    setBusy(true);
-    authMessage("Account बनाया जा रहा है...");
-    try {
-      const { data, error } = await client.auth.signUp({
-        email, password,
-        options: { emailRedirectTo: window.location.origin + window.location.pathname }
+
+    function showView(name) {
+      const target = $(name);
+      if (!target) return;
+
+      document.querySelectorAll(".view").forEach(v =>
+        v.classList.toggle("active", v.id === name)
+      );
+
+      document.querySelectorAll(".nav-btn[data-view]").forEach(btn =>
+        btn.classList.toggle("active", btn.dataset.view === name)
+      );
+
+      $("sidebar").classList.remove("open");
+      $("menuToggle").setAttribute("aria-expanded", "false");
+
+      if (name === "history") loadHistory();
+      if (name === "profile") showProfile();
+    }
+
+    document.querySelectorAll("[data-view]").forEach(btn => {
+      btn.addEventListener("click", () => showView(btn.dataset.view));
+    });
+
+    document.querySelectorAll("[data-go]").forEach(btn => {
+      btn.addEventListener("click", () => showView(btn.dataset.go));
+    });
+
+    $("menuToggle").addEventListener("click", () => {
+      const opened = $("sidebar").classList.toggle("open");
+      $("menuToggle").setAttribute("aria-expanded", String(opened));
+    });
+
+    $("defaultLanguage").value =
+      localStorage.getItem("da_language") || "Hindi";
+
+    $("language").value = $("defaultLanguage").value;
+    $("workerUrl").value = getWorkerUrl();
+
+    $("saveSettings").addEventListener("click", () => {
+      const url = $("workerUrl").value.trim();
+
+      if (!url.startsWith("https://")) {
+        setStatus("settingsStatus", "HTTPS वाला valid Worker URL डालें।");
+        return;
+      }
+
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== "https:") throw new Error("Invalid URL");
+      } catch {
+        setStatus("settingsStatus", "Worker URL सही नहीं है।");
+        return;
+      }
+
+      localStorage.setItem("da_worker_url", url.replace(/\/+$/, ""));
+      localStorage.setItem("da_language", $("defaultLanguage").value);
+      $("language").value = $("defaultLanguage").value;
+      setStatus("settingsStatus", "Settings इस browser में save हो गईं।");
+    });
+
+    async function getAccessToken() {
+      if (!supabaseClient) {
+        throw new Error("पहले Supabase URL और public key configure करें।");
+      }
+
+      const { data, error } = await supabaseClient.auth.getSession();
+      if (error) throw error;
+
+      const session = data.session;
+      if (!session?.access_token) {
+        throw new Error("Login session नहीं मिली। पहले login करें।");
+      }
+
+      return session.access_token;
+    }
+
+    async function initializeApp() {
+      if (!supabaseClient) {
+        $("accountStatus").textContent = "Configuration required";
+        setStatus(
+          "generateStatus",
+          "index.html में SUPABASE_URL और SUPABASE_PUBLISHABLE_KEY भरें।"
+        );
+        setStatus(
+          "historyStatus",
+          "History इस्तेमाल करने से पहले Supabase configuration भरें।"
+        );
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error || !data.session?.user) {
+        $("accountStatus").textContent = "Login required";
+        setStatus("generateStatus", "AI इस्तेमाल करने के लिए पहले login करें।");
+        setStatus("historyStatus", "History देखने के लिए पहले login करें।");
+        $("userEmail").textContent = "अपनी मौजूदा login screen से sign in करें।";
+        return;
+      }
+
+      currentUser = data.session.user;
+      $("accountStatus").textContent = "Logged in";
+      $("userEmail").textContent = currentUser.email || "";
+      showProfile();
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        currentUser = session?.user || null;
+        $("accountStatus").textContent =
+          currentUser ? "Logged in" : "Login required";
+        $("userEmail").textContent = currentUser?.email || "";
+
+        if (!currentUser) {
+          setStatus("generateStatus", "Session समाप्त है। दोबारा login करें।");
+          $("historyList").replaceChildren();
+        }
       });
-      if (error) throw error;
-      if (data.session) authMessage("Account बन गया और Login सफल!");
-      else authMessage("Account बन गया। Email confirmation link खोलकर फिर Login करें।");
-    } catch (e) {
-      authMessage("Sign Up Error: " + (e.message || "कृपया फिर कोशिश करें।"));
-    } finally { setBusy(false); }
-  }
-
-  async function login(event) {
-    if (event) event.preventDefault();
-    if (busy) return;
-    const email = $("email").value.trim();
-    const password = $("password").value;
-    if (!email || !password) {
-      authMessage("Email और Password दोनों भरें।");
-      return;
     }
-    setBusy(true);
-    authMessage("Login हो रहा है...");
-    try {
-      const { error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      authMessage("Login सफल!");
-    } catch (e) {
-      authMessage("Login Error: " + (e.message || "कृपया फिर कोशिश करें।"));
-    } finally { setBusy(false); }
-  }
 
-  async function logout() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      const { error } = await client.auth.signOut();
-      if (error) throw error;
-      authMessage("आप Logout हो गए हैं।");
-      showSession(null);
-    } catch (e) {
-      appMessage("Logout Error: " + (e.message || "फिर कोशिश करें।"));
-    } finally { setBusy(false); }
-  }
+    function showProfile() {
+      $("profileEmail").textContent = currentUser?.email || "Login required";
+      $("profileId").textContent = currentUser?.id || "—";
+    }
 
-  function categoryKind(selected) {
-    if (selected.includes("Caption")) return "caption";
-    if (selected.includes("Dialogue")) return "dialogue";
-    return "shayari";
+    async function workerFetch(path, options = {}) {
+      const token = await getAccessToken();
+      const base = getWorkerUrl();
+
+      if (!base.startsWith("https://") ||
+          base.includes("YOUR-WORKER")) {
+        throw new Error("Settings में अपना deployed Worker URL भरें।");
+      }
+
+      const response = await fetch(base + path, {
+        ...options,
+        headers: {
+          "Authorization": "Bearer " + token,
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...options.headers
+        }
+      });
+
+      const text = await response.text();
+      let data;
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { message: text };
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || data.message || `Request failed (${response.status})`
+        );
+      }
+
+      return data;
+    }
+
+    $("generateForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const prompt = $("prompt").value.trim();
+      if (!prompt) return;
+
+      $("generateBtn").disabled = true;
+      $("generateBtn").textContent = "Generating...";
+      setStatus("generateStatus", "AI response का इंतज़ार हो रहा है...");
+      $("resultCard").classList.add("hidden");
+
+      try {
+        const data = await workerFetch("/generate", {
+          method: "POST",
+          body: JSON.stringify({
+            prompt,
+            category: $("category").value,
+            language: $("language").value
+          })
+        });
+
+        // Worker response ke common formats support karein.
+        const result =
+          data.text ??
+          data.result ??
+          data.output ??
+          data.content ??
+          data.response?.text ??
+          data.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("\n") ??
+          "";
+
+        if (typeof result !== "string" || !result.trim()) {
+          throw new Error(
+            "Worker से text नहीं मिला। worker.js के response format को जाँचें।"
+          );
+        }
+
+        latestResult = result;
+        $("resultText").textContent = result;
+        $("resultCard").classList.remove("hidden");
+        setStatus("generateStatus", "Generation सफल हुई।");
+      } catch (error) {
+        setStatus("generateStatus", "Error: " + error.message);
+      } finally {
+        $("generateBtn").disabled = false;
+        $("generateBtn").textContent = "✦ Generate Now";
+      }
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      if (!latestResult) return;
+
+      try {
+        await navigator.clipboard.writeText(latestResult);
+        $("copyBtn").textContent = "Copied!";
+        setTimeout(() => $("copyBtn").textContent = "Copy Text", 1500);
+      } catch {
+        setStatus("generateStatus", "Copy नहीं हुआ। Text को select करके copy करें।");
+      }
+    });
+
+    function renderHistory(items) {
+      const list = $("historyList");
+      list.replaceChildren();
+
+      if (!Array.isArray(items) || items.length === 0) {
+        list.textContent = "अभी कोई history record नहीं मिला।";
+        return;
+      }
+
+      items.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "history-item";
+
+        const title = document.createElement("strong");
+        title.textContent = item.category || item.title || "AI Generation";
+
+        const content = document.createElement("p");
+        content.textContent =
+          item.result || item.output || item.content || item.text ||
+          item.generated_text || item.prompt || "Record";
+
+        const date = document.createElement("small");
+        date.className = "muted";
+        const rawDate = item.created_at || item.createdAt || item.timestamp;
+        date.textContent = rawDate
+          ? new Date(rawDate).toLocaleString()
+          : "";
+
+        const copy = document.createElement("button");
+        copy.className = "btn";
+        copy.textContent = "Copy";
+        copy.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(content.textContent);
+            copy.textContent = "Copied!";
+          } catch {
+            setStatus("historyStatus", "Copy नहीं हो पाया।");
+          }
+        });
+
+        card.append(title, content, date, copy);
+        list.append(card);
+      });
+    }
+
+    async function loadHistory() {
+      $("historyList").replaceChildren();
+      setStatus("historyStatus", "History load हो रही है...");
+
+      try {
+        const data = await workerFetch("/history", { method: "GET" });
+        const items = Array.isArray(data)
+          ? data
+          : data.history || data.items || data.data || [];
+
+        renderHistory(items);
+        setStatus("historyStatus", `Records: ${items.length}`);
+      } catch (error) {
+        setStatus("historyStatus", "History Error: " + error.message);
+      }
+    }
+
+    $("refreshHistory").addEventListener("click", loadHistory);
+
+    $("logoutBtn").addEventListener("click", async () => {
+      if (!supabaseClient) {
+        setStatus("generateStatus", "Supabase configuration पहले भरें।");
+        showView("generate");
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.signOut();
+
+      if (error) {
+        alert("Logout error: " + error.message);
+        return;
+      }
+
+      currentUser = null;
+      $("accountStatus").textContent = "Logged out";
+      $("userEmail").textContent = "";
+      $("historyList").replaceChildren();
+      showView("home");
+      alert("Logout हो गया।");
+    });
+
+    initializeApp();
+  </script>
+</body>
+</html>
+shayari";
   }
 
   async function generate() {
